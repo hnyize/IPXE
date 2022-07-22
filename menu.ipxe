@@ -1,0 +1,57 @@
+#!ipxe
+#下面这个3000是菜单等待时间代表3秒，
+   set menu-timeout 3000
+   set menu-default centos
+   isset ${ip} || dhcp
+set initiator-iqn iqn.${product}:${mac:hexhyp}
+#set gateway ${next-server}
+
+:start
+  menu iPXE Boot Menu
+  item --gap --             --------------------------------- CentOS --------------------------------
+  item centos                 BOOT CentOS Installation(HTTP)
+  item --gap --             ---------------------------- Advanced options ------------------------
+  item --key p pe              PE system                                                     -- p
+  item --key s shell           shell                                                         -- s
+  item --key r reboot          reboot computer                                               -- r
+  item --key x exit            Exit iPXE and continue BIOS boot                              -- x
+  item --gap --  
+  item --gap --             ------------------------------- systeminfo ---------------------------
+  item --gap --             DHCP Server: ${dhcp-server}
+  item --gap --             IP: ${ip}
+  item --gap --             MAC: ${mac}
+  item --gap --             netmask: ${netmask}
+  item --gap --             Gateway: ${gateway}
+  item --gap --             DNS: ${dns}
+  item --gap --             UUID: ${uuid}
+  item --gap --             initiator-iqn: ${initiator-iqn}
+  choose --timeout ${menu-timeout} --default ${menu-default} selected
+  goto ${selected}
+
+:reboot
+  reboot
+
+:exit
+  exit
+
+:shell
+  shell
+goto start
+
+
+:centos 
+  set base http://2.2.2.248/iso/centos79/
+  prompt -k 0x197e -t 2000 Press F12 to install CentOS... || exit
+  kernel ${base}/images/pxeboot/vmlinuz initrd=initrd.img repo=${base}
+  initrd ${base}/images/pxeboot/initrd.img
+  boot || read void
+
+:pe
+  initrd http://2.2.2.248/iso/WinPE.iso
+  chain http://2.2.2.248/iso/memdisk iso raw
+  
+
+:menu
+goto start
+
+
